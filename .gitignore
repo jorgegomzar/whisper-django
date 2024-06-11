@@ -1,0 +1,4 @@
+nginx/
+venv/
+.env
+docker-compose.yml

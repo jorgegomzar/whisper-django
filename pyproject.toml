@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "generate-transcript-app"
+version = "0.1.0"
+description = "A simple Django app to generate transcripts from audio or video files and display them as captions"
+authors = ["jorgegomez <jorgegomez@bmat.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Django = "^5.0.6"
+djangorestframework = "^3.15.1"
+ffmpeg-python = "^0.2.0"
+pydantic-settings = "^2.3.2"
+uwsgi = "^2.0.26"
+mysqlclient = "^2.2.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+ruff = "^0.4.8"
+ruff-lsp = "^0.0.53"
+pyright = "^1.1.366"
+ipdb = "^0.13.13"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
