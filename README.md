@@ -4,8 +4,8 @@ This is a simple web app in Django to get the transcription of a media file and 
 
 ## Motivation
 
-A person close to me (an English teacher) needed to create review English speakings and an easy way to
-quickly generate educational material out of media content.
+A person close to me (an English teacher) needed a tool to ease speakings reviews and
+to quickly generate educational material out of media content.
 
 ## Available functionalities
 
@@ -20,4 +20,4 @@ quickly generate educational material out of media content.
 
 ## TODO
 
-![TODO.md](TODO.md)
+[TODO.md](TODO.md)
