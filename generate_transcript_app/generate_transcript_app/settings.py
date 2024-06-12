@@ -29,6 +29,7 @@ class DjangoEnvConfig(BaseSettings):
     debug: bool
     allowed_hosts: list[str]
     csrf_trusted_origins: list[str]
+    delete_files_older_than_x_days: int = 1
 
 
 DJANGO_ENV_CONFIG = DjangoEnvConfig()  # type: ignore
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "transcriber",
+    "django_crontab",
 ]
 
 MIDDLEWARE = [
@@ -164,3 +166,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / MEDIA_URL
+
+CRONJOBS = [
+    # delete old files from disk every hour
+    (
+        "0 * * * *",
+        "transcriber.cron.delete_old_files_from_disk",
+        {
+            "older_than_x_days": DJANGO_ENV_CONFIG.delete_files_older_than_x_days,
+        }
+    ),
+]

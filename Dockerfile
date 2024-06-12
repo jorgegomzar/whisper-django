@@ -3,7 +3,7 @@ FROM python:3.11-slim
 RUN mkdir -p /app
 WORKDIR /app
 
-RUN apt update && apt install -y ffmpeg build-essential pkg-config default-mysql-client libpython3-dev default-libmysqlclient-dev
+RUN apt update && apt install -y ffmpeg build-essential pkg-config default-mysql-client libpython3-dev default-libmysqlclient-dev cron
 RUN pip install -U pip
 RUN pip install -U poetry
 
@@ -15,6 +15,6 @@ RUN poetry install
 
 COPY generate_transcript_app/ /app/generate_transcript_app/
 COPY uwsgi.ini /app/uwsgi.ini
+COPY init.sh /app/init.sh
 
-CMD ["/usr/local/bin/uwsgi", "--ini", "uwsgi.ini"]
-# CMD ["tail", "-f", "/dev/null"]
+CMD ["/bin/bash", "/app/init.sh"]

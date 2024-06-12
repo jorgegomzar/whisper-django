@@ -7,6 +7,7 @@ class MediaFile(models.Model):
     transcription = models.TextField(blank=True, null=True)
     vtt_file = models.FileField(upload_to='captions/', blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    deleted = models.BooleanField(default=False, blank=False, null=False)
 
     def __str__(self) -> str:
         return self.file.name or "no_name"

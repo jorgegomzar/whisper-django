@@ -3,9 +3,6 @@
     - Need to dockerize the repo + add nginx to properly set the header for the video to work
     https://stackoverflow.com/questions/36783521/why-does-setting-currenttime-of-html5-video-element-reset-time-in-chrome
 - Allow user to add comment on each line + show in reports
-- Periodically delete files from disk to save space
-    - New field --> deleted boolean updated when file is deleted
-    - Cron task to query for all deleted=false files with creation date greater than 1w
 - Allow users to work on an existing AV + json
     - Obscure URL somehow and add it to the JSON export / add Audiovisual id to JSON --> needs to be obscure somehow
     - Move JSON import button to root page
