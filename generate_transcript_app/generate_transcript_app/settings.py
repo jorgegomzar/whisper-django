@@ -10,8 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from dotenv import load_dotenv
 from pathlib import Path
+from pwd import getpwuid
 from pydantic_settings import BaseSettings
 
 
@@ -25,6 +27,8 @@ class DjangoEnvConfig(BaseSettings):
     mysql_host: str
     secret_key: str
     debug: bool
+    allowed_hosts: list[str]
+    csrf_trusted_origins: list[str]
 
 
 DJANGO_ENV_CONFIG = DjangoEnvConfig()  # type: ignore
@@ -43,8 +47,17 @@ SECRET_KEY = DJANGO_ENV_CONFIG.secret_key
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV_CONFIG.debug
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = DJANGO_ENV_CONFIG.allowed_hosts
 
+CSRF_TRUSTED_ORIGINS = DJANGO_ENV_CONFIG.csrf_trusted_origins
+
+__USERNAME = getpwuid(os.getuid()).pw_name
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': f'/tmp/{__USERNAME}-django/',
+    },
+}
 
 # Application definition
 

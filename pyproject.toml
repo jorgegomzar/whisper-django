@@ -12,6 +12,7 @@ djangorestframework = "^3.15.1"
 ffmpeg-python = "^0.2.0"
 pydantic-settings = "^2.3.2"
 uwsgi = "^2.0.26"
+openai-whisper = "^20231117"
 mysqlclient = "^2.2.4"
 
 [tool.poetry.group.dev.dependencies]

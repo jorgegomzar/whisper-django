@@ -1,2 +1,0 @@
-# needs to be in a separate requirements bc poetry cannot lock a dependency for openai-whisper
-openai-whisper
