@@ -1,6 +1,8 @@
 #!/bin/bash
 
-python /src/generate_transcript_app/manage.py migrate
-python /src/generate_transcript_app/manage.py crontab add
+# wait for DB to be ready
+sleep 15
+python generate_transcript_app/manage.py migrate
+python generate_transcript_app/manage.py crontab add
 
-uwsgi --ini /src/uwsgi.ini
+uwsgi --ini uwsgi.ini

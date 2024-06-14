@@ -172,6 +172,7 @@ CRONJOBS = [
     (
         "0 * * * *",
         "transcriber.cron.delete_old_files_from_disk",
+        [],
         {
             "older_than_x_days": DJANGO_ENV_CONFIG.delete_files_older_than_x_days,
         }
