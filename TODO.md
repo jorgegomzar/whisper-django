@@ -1,8 +1,6 @@
-- VTT content should be stored in DB to not re-read the file every time the user loads the page
+- Fix 502 error when index redirects to detail page
 
-- Add button on transcript lines to go to video instants
-    - Need to dockerize the repo + add nginx to properly set the header for the video to work
-    https://stackoverflow.com/questions/36783521/why-does-setting-currenttime-of-html5-video-element-reset-time-in-chrome
+- VTT content should be stored in DB to not re-read the file every time the user loads the page
 
 - Allow user to add comment on each line + show in reports
 
