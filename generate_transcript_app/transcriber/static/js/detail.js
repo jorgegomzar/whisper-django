@@ -341,7 +341,7 @@ $(document).ready(() => {
     "'>" +
     "<div class='input-group'>" +
       "<div class='btn-group' role='group' aria-label='Caption options'>" +
-        "<button type='button' class='btn btn-outline-warning visually-hidden' onclick='goToCaptionInVideo("+x.start_time+")'>Go</button>" +
+        "<button type='button' class='btn btn-outline-warning' onclick='goToCaptionInVideo("+x.start_time+")'>Go</button>" +
         "<button type='button' class='btn btn-outline-info visually-hidden'>Add comment</button>" +
 
         "<div class='btn-group' role='group'>" +
