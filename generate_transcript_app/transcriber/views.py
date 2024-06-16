@@ -1,7 +1,8 @@
+import io
 import whisper
+from django.http.response import HttpResponse, HttpResponseServerError
 from django.shortcuts import render, redirect
 from django.template.defaulttags import register
-from pathlib import Path
 from whisper.utils import WriteVTT
 
 from .forms import MediaFileForm
@@ -14,15 +15,16 @@ def index(request):
         if form.is_valid():
             media_file: MediaFile = form.save()
             # Trigger Whisper AI transcription
-            transcription, vtt_file = transcribe_file(media_file.file.path, media_file.extension)  # type: ignore
-            media_file.transcription = transcription  # type: ignore
-            media_file.vtt_file = vtt_file  # type: ignore
+            vtt_transcription = transcribe_file(media_file.file.path)  # type: ignore
+            media_file.vtt_transcription = vtt_transcription  # type: ignore
             media_file.save()
             return redirect('transcriber:detail', pk=media_file.pk)
     else:
         form = MediaFileForm()
 
-    uploaded_not_deleted = MediaFile.objects.filter(deleted=False).order_by("-uploaded_at")
+    uploaded_not_deleted = MediaFile.objects.filter(  # type: ignore
+        deleted=False
+    ).order_by("-uploaded_at")
     return render(request, 'transcriber/index.html', {
         'form': form,
         'uploaded_not_deleted': uploaded_not_deleted,
@@ -31,36 +33,36 @@ def index(request):
 
 def detail(request, pk):
     media_file = MediaFile.objects.get(pk=pk)  # type: ignore
-    return render(
-        request,
-        'transcriber/detail.html',
-        {
-            'media_file': media_file,
-            'vtt_transcription': Path(media_file.vtt_file.path).open().read(),
-        }
-    )
+    if request.method == "GET":
+        return render(
+            request,
+            'transcriber/detail.html',
+            {
+                'media_file': media_file,
+            }
+        )
+    if request.method == "POST":
+        try:
+            media_file.json_save = request.POST.get("json_save", "")
+            media_file.save()
+        except Exception:
+            return HttpResponseServerError(b"Failed to save data into DB.")
+        return HttpResponse(b"Status saved to DB.")
 
 
-def transcribe_file(file_path: str, file_extension: str) -> tuple[str, str]:
+def transcribe_file(file_path: str) -> str:
     """From a file, it generates:
 
-    - transcription text
-    - VTT transcription file path --> for media player captions
+    - VTT transcription text
     """
-    vtt_file_path_str = file_path.replace(file_extension, 'vtt').replace("uploads", "captions")
-    vtt_file_path = Path(vtt_file_path_str)
-
-    vtt_file_path.parent.mkdir(parents=True, exist_ok=True)
-
     model = whisper.load_model("base")
-    result = model.transcribe(file_path)
+    result = model.transcribe(file_path, language="en")
 
-    transcription: str = result["text"]  # type: ignore
+    vtt_transcription = io.StringIO()
+    WriteVTT("vtt").write_result(result, vtt_transcription)
+    vtt_transcription.seek(0)
 
-    with vtt_file_path.open(mode="wt") as vtt_file:
-        WriteVTT("vtt").write_result(result, vtt_file)
-
-    return transcription, vtt_file_path.relative_to(Path(__file__).parent.parent / "media/").__str__()
+    return vtt_transcription.getvalue()
 
 
 @register.filter(name='split')
