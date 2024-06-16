@@ -21,7 +21,12 @@ def index(request):
             return redirect('transcriber:detail', pk=media_file.pk)
     else:
         form = MediaFileForm()
-    return render(request, 'transcriber/index.html', {'form': form})
+
+    uploaded_not_deleted = MediaFile.objects.filter(deleted=False).order_by("-uploaded_at")
+    return render(request, 'transcriber/index.html', {
+        'form': form,
+        'uploaded_not_deleted': uploaded_not_deleted,
+    })
 
 
 def detail(request, pk):
