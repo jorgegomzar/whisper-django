@@ -30,6 +30,11 @@ class DjangoEnvConfig(BaseSettings):
     allowed_hosts: list[str]
     csrf_trusted_origins: list[str]
     delete_files_older_than_x_days: int = 1
+    celery_broker_url: str = 'redis://redis:6379/0'
+    celery_result_backend: str = 'redis://redis:6379/0'
+    celery_timezone: str = 'UTC'
+    celery_task_default_queue: str = 'transcriber'
+    celery_worker_concurrency: int = 1
 
 
 DJANGO_ENV_CONFIG = DjangoEnvConfig()  # type: ignore
@@ -44,12 +49,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = DJANGO_ENV_CONFIG.secret_key
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV_CONFIG.debug
-
 ALLOWED_HOSTS = DJANGO_ENV_CONFIG.allowed_hosts
-
 CSRF_TRUSTED_ORIGINS = DJANGO_ENV_CONFIG.csrf_trusted_origins
 
 __USERNAME = getpwuid(os.getuid()).pw_name
@@ -60,9 +62,21 @@ CACHES = {
     },
 }
 
+CELERY_BROKER_URL = DJANGO_ENV_CONFIG.celery_broker_url
+CELERY_RESULT_BACKEND = DJANGO_ENV_CONFIG.celery_result_backend
+CELERY_TIMEZONE = DJANGO_ENV_CONFIG.celery_timezone
+CELERY_TASK_DEFAULT_QUEUE = DJANGO_ENV_CONFIG.celery_task_default_queue
+CELERY_WORKER_CONCURRENCY = DJANGO_ENV_CONFIG.celery_worker_concurrency
+CELERY_TASK_ANNOTATIONS = {
+    '*': {'shadow_name': lambda task, args, kwargs, options: f'{task.name}, {args}, {kwargs}'[:1000]}  # type: ignore
+}
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 # Application definition
 
 INSTALLED_APPS = [
+    "django_celery_beat",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -178,3 +192,35 @@ CRONJOBS = [
         }
     ),
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': { 'format': '%(levelname)s %(name)s %(asctime)s %(funcName)s: %(message)s' },
+        'simple': { 'format': '%(levelname)s: %(message)s' },
+    },
+    'handlers': {
+        'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
+            },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'celery': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'tasks': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
