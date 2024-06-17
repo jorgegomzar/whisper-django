@@ -3,6 +3,7 @@ var videoPlayer = $("#player")
 var captions_container = $("#captions_container")
 var btn_close_modal = $("#btn_close_modal")
 var session_data = null
+var there_are_unsaved_changes = false
 
 
 function parseTime(time_str) {
@@ -150,6 +151,7 @@ function setSpeakerForCaption(caption_index, speaker_index) {
 
   session_data.captions[caption_index].speaker = speaker_index
   sessionStorage.setItem("session_data", JSON.stringify(session_data))
+  there_are_unsaved_changes = true
 
   updateHTMLSpeakerForCaption()
 }
@@ -178,6 +180,7 @@ function addSpeaker() {
 
   session_data.speakers[Object.keys(session_data.speakers).length] = spokesperson_name
   sessionStorage.setItem("session_data", JSON.stringify(session_data))
+  there_are_unsaved_changes = true
 
   updateDropDownHTMLSpeakersList()
 }
@@ -187,51 +190,8 @@ function updateCaptionText(caption_index) {
   let text = $("#caption-input-" + (caption_index || "0")).val()
   session_data.captions[caption_index].text = text
   sessionStorage.setItem("session_data", JSON.stringify(session_data))
+  there_are_unsaved_changes = true
 }
-
-
-// credit: https://www.30secondsofcode.org/js/s/json-to-file/
-const JSONToFile = (obj, filename) => {
-  const blob = new Blob([JSON.stringify(obj, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filename}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-
-$("#save_to_local").click(() => {
-  let filename = $("#page-title").html().replace(" - ", "_")
-  JSONToFile(session_data, filename);
-})
-
-
-$("#load_from_local").change((e) => {
-  // credit: https://stackoverflow.com/questions/36127648/uploading-a-json-file-and-using-it
-  try {
-    let files = e.target.files
-    if (!files.length) {
-        alert('No file selected!')
-        return
-    }
-    let file = files[0]
-    let reader = new FileReader()
-    const self = this
-    reader.onload = (event) => {
-      session_data = JSON.parse(event.target.result)
-      sessionStorage.setItem("session_data", JSON.stringify(session_data))
-    }
-    reader.readAsText(file)
-    alert("File loaded successfully")
-    location.reload()
-  } catch (err) {
-    console.error(err)
-  }
-})
 
 
 function getScriptForPDF() {
@@ -280,18 +240,40 @@ $("#generate_report").click(() => {
 
 
 $("#go_back").click(() => {
-  let text = "You will lose all your progress if you go back.\nPlease save a local copy if you haven't done already.\nContinue?"
-  if (confirm(text) == true) {
+  let go_back = false
+  if (there_are_unsaved_changes) {
+      go_back = confirm(
+        "You will lose all your progress if you go back.\nPlease save a local copy if you haven't done already.\nContinue?"
+      ) == true
+  } else {
+    go_back = true
+  }
+
+  if (go_back) {
     session_data = null
     sessionStorage.clear()
     location.replace("/")
   }
 })
 
+$("#save_status").click(() => {
+  let save_status_json = {"json_save": JSON.stringify(session_data)} 
+  let csrf_token = $('input[name="csrfmiddlewaretoken"]').val()
+  Object.assign(save_status_json, session_data, {"csrfmiddlewaretoken": csrf_token})
+
+  $.post(location.href, save_status_json, (data, status) => {
+    alert("Data: " + data + "\nStatus: " + status)
+    if (status == "success") {
+      there_are_unsaved_changes = false
+    }
+  })
+})
+
 $(document).ready(() => {
   videoPlayer.bind('timeupdate', videoUpdate);
 
   // recover session information
+  let json_save = $("#json_save").html()
   session_data = sessionStorage.getItem("session_data")
   if (session_data != null) {
     session_data = JSON.parse(session_data)
@@ -302,8 +284,18 @@ $(document).ready(() => {
     }
   }
 
+  // try to restore session from db data
+  if (session_data == null && json_save != "") {
+    try {
+      session_data = JSON.parse(json_save)
+    } catch (error) {
+      console.log("Error parsing DB json save")
+      console.error(error)
+    }
+  }
+
+  // we have no data to restore, let's create a new session_data
   if (session_data == null) {
-    // first time loading the page, no info cached
     session_data = {
       "speakers": {},
       "captions": [],
@@ -329,6 +321,7 @@ $(document).ready(() => {
         index++
     })
     sessionStorage.setItem("session_data", JSON.stringify(session_data))
+    there_are_unsaved_changes = true
   }
 
   // update HTML with captions info
@@ -341,7 +334,7 @@ $(document).ready(() => {
     "'>" +
     "<div class='input-group'>" +
       "<div class='btn-group' role='group' aria-label='Caption options'>" +
-        "<button type='button' class='btn btn-outline-warning visually-hidden' onclick='goToCaptionInVideo("+x.start_time+")'>Go</button>" +
+        "<button type='button' class='btn btn-outline-warning' onclick='goToCaptionInVideo("+x.start_time+")'>Go</button>" +
         "<button type='button' class='btn btn-outline-info visually-hidden'>Add comment</button>" +
 
         "<div class='btn-group' role='group'>" +

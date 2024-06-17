@@ -54,36 +54,22 @@
     <div class="row">
       <p class="d-inline-flex gap-1">
         <button class="btn btn-danger" id="go_back">Go back</button>
-        <button
-          class="btn btn-primary"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#collapseExample"
-          aria-expanded="false"
-          aria-controls="collapseExample">
-            Load from local
-        </button>
-        <button class="btn btn-primary" id="save_to_local">Save to local</button>
+        <button class="btn btn-primary" id="save_status">Save status</button>
         <button class="btn btn-warning" id="generate_report">Generate report</button>
         <button class="btn btn-warning" id="add_spokesperson" data-bs-toggle="modal" data-bs-target="#add_spokesperson_modal">Add spokesperson</button>
         <button class="btn btn-info" id="toggle_follow" onclick="toggleFolow()">Disable follow</button>
       </p>
-      <div class="collapse" id="collapseExample">
-        <div class="card card-body">
-          <div class="input-group mb-3">
-            <label class="input-group-text" for="load_from_local">Load from local</label>
-            <input type="file" class="form-control" id="load_from_local">
-          </div>
-        </div>
-      </div>
     </div>
     <div class="row">&nbsp;</div>
     <div class="row bg-secondary bg-gradient p-1" style="height: 600px">
       <ul class="col list-group mh-100 overflow-y-scroll" id="captions_container">
-        {{vtt_transcription}}
+        {{ media_file.vtt_transcription }}
       </ul>
     </div>
   </div>
+
+  <div id="json_save" class="visually-hidden">{{ media_file.json_save }}</div>
+  {% csrf_token %}
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

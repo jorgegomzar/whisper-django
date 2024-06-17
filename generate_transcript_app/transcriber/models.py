@@ -4,10 +4,10 @@ from django.db import models
 
 class MediaFile(models.Model):
     file = models.FileField(upload_to='uploads/')
-    transcription = models.TextField(blank=True, null=True)
-    vtt_file = models.FileField(upload_to='captions/', blank=True, null=True)
+    vtt_transcription = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False, blank=False, null=False)
+    json_save = models.TextField(blank=True, null=True)
 
     def __str__(self) -> str:
         return self.file.name or "no_name"
