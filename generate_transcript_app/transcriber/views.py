@@ -1,12 +1,11 @@
-import io
-import whisper
-from django.http.response import HttpResponse, HttpResponseServerError
-from django.shortcuts import render, redirect
+import json
+from django.http.response import Http404, HttpResponse, HttpResponseServerError
+from django.shortcuts import render
 from django.template.defaulttags import register
-from whisper.utils import WriteVTT
 
 from .forms import MediaFileForm
 from .models import MediaFile
+from .tasks import transcribe_file
 
 
 def index(request):
@@ -14,21 +13,10 @@ def index(request):
         form = MediaFileForm(request.POST, request.FILES)
         if form.is_valid():
             media_file: MediaFile = form.save()
-            # Trigger Whisper AI transcription
-            vtt_transcription = transcribe_file(media_file.file.path)  # type: ignore
-            media_file.vtt_transcription = vtt_transcription  # type: ignore
-            media_file.save()
-            return redirect('transcriber:detail', pk=media_file.pk)
-    else:
-        form = MediaFileForm()
-
-    uploaded_not_deleted = MediaFile.objects.filter(  # type: ignore
-        deleted=False
-    ).order_by("-uploaded_at")
-    return render(request, 'transcriber/index.html', {
-        'form': form,
-        'uploaded_not_deleted': uploaded_not_deleted,
-    })
+            # async transcribe file
+            transcribe_file.delay(media_file.id)  # type: ignore
+    form = MediaFileForm()
+    return render(request, 'transcriber/index.html', { 'form': form, })
 
 
 def detail(request, pk):
@@ -50,19 +38,24 @@ def detail(request, pk):
         return HttpResponse(b"Status saved to DB.")
 
 
-def transcribe_file(file_path: str) -> str:
-    """From a file, it generates:
+def list_uploaded(request):
+    if request.method != "GET":
+        return Http404("Wrong method. Use GET.")
 
-    - VTT transcription text
-    """
-    model = whisper.load_model("base")
-    result = model.transcribe(file_path, language="en")
+    uploaded_not_deleted = MediaFile.objects.filter(  # type: ignore
+        deleted=False,
+    ).exclude(
+        vtt_transcription=None,
+    ).order_by("-uploaded_at")
 
-    vtt_transcription = io.StringIO()
-    WriteVTT("vtt").write_result(result, vtt_transcription)
-    vtt_transcription.seek(0)
-
-    return vtt_transcription.getvalue()
+    return HttpResponse(json.dumps([
+        {
+            "id": media.id,
+            "title": media.file.name.replace("uploads/", ""),
+            "uploaded_at": media.uploaded_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        for media in uploaded_not_deleted
+    ]).encode())
 
 
 @register.filter(name='split')
