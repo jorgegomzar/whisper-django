@@ -15,6 +15,9 @@ uwsgi = "^2.0.26"
 openai-whisper = "^20231117"
 mysqlclient = "^2.2.4"
 django-crontab = "^0.7.1"
+celery = "^5.4.0"
+redis = "^5.0.6"
+django-celery-beat = "^2.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
